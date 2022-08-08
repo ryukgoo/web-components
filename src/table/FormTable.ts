@@ -5,7 +5,7 @@ import { FormTableCell } from './FormTableCell.js';
 export class FormTable extends LitElement {
   static styles = css`
     :host {
-      display: inline-grid;
+      display: grid;
       width: 100%;
       border-collapse: collapse;
       box-sizing: border-box;
@@ -21,6 +21,28 @@ export class FormTable extends LitElement {
   @property({ type: Number, reflect: true })
   row = 0;
 
+  // region key event
+
+  private _onKeyDownHandler = this._onKeyDown.bind(this);
+
+  private _onKeyDown(event: KeyboardEvent) {
+    switch (event.code) {
+      case 'KeyM':
+        this.merge();
+        break;
+      case 'KeyS':
+        this.split();
+        break;
+      default:
+        // eslint-disable-next-line no-console
+        console.log('_onKeyDown', event.code);
+        break;
+    }
+  }
+
+  // endregion
+
+  // region select TableCell
   private _selection: FormTableCell[] = [];
 
   private _pressedCell: FormTableCell | undefined;
@@ -28,6 +50,7 @@ export class FormTable extends LitElement {
   private _onMouseDownHandler = this._onMouseDown.bind(this);
 
   private _onMouseDown(event: MouseEvent) {
+    this._clearSelection();
     window.addEventListener('mousemove', this._onMouseMoveHandler);
     window.addEventListener('mouseup', this._onMouseUpHandler);
     const target = event.target as HTMLElement;
@@ -39,8 +62,23 @@ export class FormTable extends LitElement {
   private _onMouseMove(event: Event) {
     const target = event.target as FormTableCell;
     const cell = target.closest('form-table-cell') as FormTableCell;
-    this._setSelection(this._pressedCell!, cell);
-    this._addSelection(cell);
+
+    const start = {
+      x: Math.min(this._pressedCell!.colIndex, cell.colIndex),
+      y: Math.min(this._pressedCell!.rowIndex, cell.rowIndex),
+    };
+    const end = {
+      x: Math.max(
+        this._pressedCell!.colIndex + this._pressedCell!.colSpan - 1,
+        cell.colIndex + cell.colSpan - 1
+      ),
+      y: Math.max(
+        this._pressedCell!.rowIndex + this._pressedCell!.rowSpan - 1,
+        cell.rowIndex + cell.rowSpan - 1
+      ),
+    };
+
+    this._setSelection(start, end);
   }
 
   private _onMouseUpHandler = this._onMouseUp.bind(this);
@@ -48,7 +86,6 @@ export class FormTable extends LitElement {
   private _onMouseUp() {
     window.removeEventListener('mousemove', this._onMouseMoveHandler);
     window.removeEventListener('mouseup', this._onMouseUpHandler);
-    this._clearSelection();
   }
 
   private _addSelection(cell: FormTableCell | undefined) {
@@ -62,41 +99,102 @@ export class FormTable extends LitElement {
   }
 
   private _setSelection(
-    startCell: FormTableCell | undefined,
-    endCell: FormTableCell | undefined
+    start: { x: number; y: number },
+    end: { x: number; y: number }
   ) {
-    this._clearSelection();
-    if (!startCell || !endCell) return;
-    const minCol = Math.min(startCell.colIndex, endCell.colIndex);
-    const maxCol = Math.max(
-      startCell.colIndex + startCell.colSpan - 1,
-      endCell.colIndex + endCell.colSpan - 1
-    );
-    const minRow = Math.min(startCell.rowIndex, endCell.rowIndex);
-    const maxRow = Math.max(
-      startCell.rowIndex + startCell.rowSpan - 1,
-      endCell.rowIndex + endCell.rowSpan - 1
-    );
     this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
       if (
-        (cell.colIndex >= minCol &&
-          cell.colIndex <= maxCol &&
-          cell.rowIndex >= minRow &&
-          cell.rowIndex <= maxRow) ||
-        (cell.colIndex + cell.colSpan - 1 >= minCol &&
-          cell.colIndex + cell.colSpan - 1 <= maxCol &&
-          cell.rowIndex + cell.rowSpan - 1 >= minRow &&
-          cell.rowIndex + cell.rowSpan - 1 <= maxRow)
+        (cell.colIndex >= start.x &&
+          cell.colIndex <= end.x &&
+          cell.rowIndex >= start.y &&
+          cell.rowIndex <= end.y) ||
+        (cell.colIndex + cell.colSpan - 1 >= start.x &&
+          cell.colIndex + cell.colSpan - 1 <= end.x &&
+          cell.rowIndex + cell.rowSpan - 1 >= start.y &&
+          cell.rowIndex + cell.rowSpan - 1 <= end.y)
       ) {
         this._addSelection(cell);
       }
     });
+    const minSelectionX = this._selection
+      .map(selectedCell => selectedCell.colIndex)
+      .reduce((previous, current) => Math.min(previous, current));
+    const minSelectionY = this._selection
+      .map(selectedCell => selectedCell.rowIndex)
+      .reduce((previous, current) => Math.min(previous, current));
+    const maxSelectionX = this._selection
+      .map(selectedCell => selectedCell.colIndex + selectedCell.colSpan - 1)
+      .reduce((previous, current) => Math.max(previous, current));
+    const maxSelectionY = this._selection
+      .map(selectedCell => selectedCell.rowIndex + selectedCell.rowSpan - 1)
+      .reduce((previous, current) => Math.max(previous, current));
+    if (
+      start.x !== minSelectionX ||
+      end.x !== maxSelectionX ||
+      start.y !== minSelectionY ||
+      end.y !== maxSelectionY
+    ) {
+      this._setSelection(
+        { x: minSelectionX, y: minSelectionY },
+        { x: maxSelectionX, y: maxSelectionY }
+      );
+    }
   }
 
   private _clearSelection() {
     this._selection.forEach(cell => cell.removeFocus());
     this._selection = [];
   }
+  // endregion
+
+  // public functions
+  public merge() {
+    const copiedSelection = [...this._selection];
+    const first = copiedSelection
+      .sort((a, b) => a.colIndex - b.colIndex)
+      .sort((a, b) => a.rowIndex - b.rowIndex)
+      .shift();
+
+    if (first) {
+      const rowSpan = Array.from(Array(this.col).keys())
+        .map(x =>
+          this._selection
+            .filter(cell => cell.colIndex === x + 1)
+            .map(cell => cell.rowSpan)
+            .reduce((previous, current) => previous + current, 0)
+        )
+        .reduce((previous, current) => Math.max(previous, current));
+      const colSpan = Array.from(Array(this.row).keys())
+        .map(y =>
+          this._selection
+            .filter(cell => cell.rowIndex === y + 1)
+            .map(cell => cell.colSpan)
+            .reduce((previous, current) => previous + current, 0)
+        )
+        .reduce((previous, current) => Math.max(previous, current));
+
+      // eslint-disable-next-line no-console
+      console.log('colSpan', colSpan, 'rowSpan', rowSpan);
+
+      first.colSpan = colSpan;
+      first.rowSpan = rowSpan;
+      copiedSelection.forEach(cell => cell?.remove());
+    }
+  }
+
+  public split() {
+    const copiedSelection = [...this._selection];
+    const first = copiedSelection
+      .sort((a, b) => a.colIndex - b.colIndex)
+      .sort((a, b) => a.rowIndex - b.rowIndex)
+      .shift();
+
+    if (first) {
+      first.colSpan = 1;
+      first.rowSpan = 1;
+    }
+  }
+  // endregion
 
   private _onSlotChange() {
     const cells = this.querySelectorAll<FormTableCell>('form-table-cell');
@@ -112,6 +210,16 @@ export class FormTable extends LitElement {
     this.row = Array.from(cells)
       .map(cell => cell.rowIndex + cell.rowSpan - 1)
       .reduce((previous, current) => Math.max(previous, current), 0);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('keydown', this._onKeyDownHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.addEventListener('keydown', this._onKeyDownHandler);
   }
 
   protected updated(_changedProperties: PropertyValues) {

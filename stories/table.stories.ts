@@ -45,6 +45,10 @@ export const FormTable = () => html`
     <form-table-cell col-index="2" row-index="5"><p>Cell</p></form-table-cell>
     <form-table-cell col-index="3" row-index="5"><p>Cell</p></form-table-cell>
     <form-table-cell col-index="4" row-index="5"><p>Cell</p></form-table-cell>
+    <form-table-cell col-index="1" row-index="5"><p>Cell</p></form-table-cell>
+    <form-table-cell col-index="2" row-index="5"><p>Cell</p></form-table-cell>
+    <form-table-cell col-index="3" row-index="5"><p>Cell</p></form-table-cell>
+    <form-table-cell col-index="4" row-index="5"><p>Cell</p></form-table-cell>
   </form-table>
 `;
 
