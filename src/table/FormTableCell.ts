@@ -22,46 +22,50 @@ export class FormTableCell extends LitElement {
   @property({ type: Number, reflect: true, attribute: 'row-index' })
   rowIndex = 0;
 
-  @property({ type: Number, reflect: true, attribute: 'colspan' })
-  colSpan = 1;
+  @property({ type: Number, reflect: true })
+  colspan = 1;
 
-  @property({ type: Number, reflect: true, attribute: 'rowspan' })
-  rowSpan = 1;
+  @property({ type: Number, reflect: true })
+  rowspan = 1;
 
   @property({ type: String, reflect: true, attribute: 'background-color' })
   backgroundColor = 'white';
 
   @property({ type: String, reflect: true, attribute: 'border-left-color' })
-  borderLeftColor = 'black';
+  borderLeftColor = '';
 
   @property({ type: String, reflect: true, attribute: 'border-right-color' })
-  borderRightColor = 'black';
+  borderRightColor = '';
 
-  protected updated(_changedProperties: PropertyValues) {
-    super.updated(_changedProperties);
+  @property({ type: String, reflect: true, attribute: 'border-top-color' })
+  borderTopColor = '';
 
-    if (
-      _changedProperties.has('colSpan') ||
-      _changedProperties.has('colIndex')
-    ) {
-      this.style.gridColumn = `${this.colIndex} / span ${this.colSpan}`;
-    }
-    if (
-      _changedProperties.has('rowSpan') ||
-      _changedProperties.has('rowIndex')
-    ) {
-      this.style.gridRow = `${this.rowIndex} / span ${this.rowSpan}`;
-    }
-    if (_changedProperties.has('backgroundColor')) {
-      this.style.backgroundColor = `${this.backgroundColor}`;
-    }
-    if (_changedProperties.has('borderLeftColor')) {
-      this.style.borderLeftColor = `${this.borderLeftColor}`;
-    }
-    if (_changedProperties.has('borderRightColor')) {
-      this.style.borderRightColor = `${this.borderRightColor}`;
-    }
-  }
+  @property({ type: String, reflect: true, attribute: 'border-bottom-color' })
+  borderBottomColor = '';
+
+  @property({ type: String, reflect: true, attribute: 'border-left-style' })
+  borderLeftStyle = 'solid';
+
+  @property({ type: String, reflect: true, attribute: 'border-right-style' })
+  borderRightStyle = 'solid';
+
+  @property({ type: String, reflect: true, attribute: 'border-top-style' })
+  borderTopStyle = 'solid';
+
+  @property({ type: String, reflect: true, attribute: 'border-bottom-style' })
+  borderBottomStyle = 'solid';
+
+  @property({ type: String, reflect: true, attribute: 'border-left-width' })
+  borderLeftWidth = '1px';
+
+  @property({ type: String, reflect: true, attribute: 'border-right-width' })
+  borderRightWidth = '1px';
+
+  @property({ type: String, reflect: true, attribute: 'border-top-width' })
+  borderTopWidth = '1px';
+
+  @property({ type: String, reflect: true, attribute: 'border-bottom-width' })
+  borderBottomWidth = '1px';
 
   public setFocus() {
     this.classList.add('focus');
@@ -71,7 +75,30 @@ export class FormTableCell extends LitElement {
     this.classList.remove('focus');
   }
 
+  protected updated(_changedProperties: PropertyValues) {
+    super.updated(_changedProperties);
+
+    Array.from(_changedProperties.keys()).forEach(key => {
+      // @ts-ignore
+      const newValue = this[key];
+      const oldValue = _changedProperties.get(key);
+      if (oldValue !== newValue) {
+        // @ts-ignore
+        this.style[key] = newValue;
+      }
+    });
+  }
+
   protected render(): unknown {
-    return html` <slot></slot> `;
+    return html`
+      <style>
+        :host {
+          grid-column: ${this.colIndex} / span ${this.colspan};
+          grid-row: ${this.rowIndex} / span ${this.rowspan};
+          background-color: ${this.backgroundColor};
+        }
+      </style>
+      <slot></slot>
+    `;
   }
 }

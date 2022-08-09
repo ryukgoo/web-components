@@ -1,8 +1,9 @@
 import { css, html, LitElement, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { FormTableCell } from './FormTableCell.js';
+import { FormTableInterface } from './FormTableInterface.js';
 
-export class FormTable extends LitElement {
+export class FormTable extends LitElement implements FormTableInterface {
   static styles = css`
     :host {
       display: grid;
@@ -69,12 +70,12 @@ export class FormTable extends LitElement {
     };
     const end = {
       x: Math.max(
-        this._pressedCell!.colIndex + this._pressedCell!.colSpan - 1,
-        cell.colIndex + cell.colSpan - 1
+        this._pressedCell!.colIndex + this._pressedCell!.colspan - 1,
+        cell.colIndex + cell.colspan - 1
       ),
       y: Math.max(
-        this._pressedCell!.rowIndex + this._pressedCell!.rowSpan - 1,
-        cell.rowIndex + cell.rowSpan - 1
+        this._pressedCell!.rowIndex + this._pressedCell!.rowspan - 1,
+        cell.rowIndex + cell.rowspan - 1
       ),
     };
 
@@ -108,10 +109,10 @@ export class FormTable extends LitElement {
           cell.colIndex <= end.x &&
           cell.rowIndex >= start.y &&
           cell.rowIndex <= end.y) ||
-        (cell.colIndex + cell.colSpan - 1 >= start.x &&
-          cell.colIndex + cell.colSpan - 1 <= end.x &&
-          cell.rowIndex + cell.rowSpan - 1 >= start.y &&
-          cell.rowIndex + cell.rowSpan - 1 <= end.y)
+        (cell.colIndex + cell.colspan - 1 >= start.x &&
+          cell.colIndex + cell.colspan - 1 <= end.x &&
+          cell.rowIndex + cell.rowspan - 1 >= start.y &&
+          cell.rowIndex + cell.rowspan - 1 <= end.y)
       ) {
         this._addSelection(cell);
       }
@@ -123,10 +124,10 @@ export class FormTable extends LitElement {
       .map(selectedCell => selectedCell.rowIndex)
       .reduce((previous, current) => Math.min(previous, current));
     const maxSelectionX = this._selection
-      .map(selectedCell => selectedCell.colIndex + selectedCell.colSpan - 1)
+      .map(selectedCell => selectedCell.colIndex + selectedCell.colspan - 1)
       .reduce((previous, current) => Math.max(previous, current));
     const maxSelectionY = this._selection
-      .map(selectedCell => selectedCell.rowIndex + selectedCell.rowSpan - 1)
+      .map(selectedCell => selectedCell.rowIndex + selectedCell.rowspan - 1)
       .reduce((previous, current) => Math.max(previous, current));
     if (
       start.x !== minSelectionX ||
@@ -145,10 +146,11 @@ export class FormTable extends LitElement {
     this._selection.forEach(cell => cell.removeFocus());
     this._selection = [];
   }
+
   // endregion
 
   // public functions
-  public merge() {
+  merge(): void {
     const copiedSelection = [...this._selection];
     const first = copiedSelection
       .sort((a, b) => a.colIndex - b.colIndex)
@@ -160,7 +162,7 @@ export class FormTable extends LitElement {
         .map(x =>
           this._selection
             .filter(cell => cell.colIndex === x + 1)
-            .map(cell => cell.rowSpan)
+            .map(cell => cell.rowspan)
             .reduce((previous, current) => previous + current, 0)
         )
         .reduce((previous, current) => Math.max(previous, current));
@@ -168,7 +170,7 @@ export class FormTable extends LitElement {
         .map(y =>
           this._selection
             .filter(cell => cell.rowIndex === y + 1)
-            .map(cell => cell.colSpan)
+            .map(cell => cell.colspan)
             .reduce((previous, current) => previous + current, 0)
         )
         .reduce((previous, current) => Math.max(previous, current));
@@ -176,13 +178,13 @@ export class FormTable extends LitElement {
       // eslint-disable-next-line no-console
       console.log('colSpan', colSpan, 'rowSpan', rowSpan);
 
-      first.colSpan = colSpan;
-      first.rowSpan = rowSpan;
+      first.colspan = colSpan;
+      first.rowspan = rowSpan;
       copiedSelection.forEach(cell => cell?.remove());
     }
   }
 
-  public split() {
+  split(): void {
     const copiedSelection = [...this._selection];
     const first = copiedSelection
       .sort((a, b) => a.colIndex - b.colIndex)
@@ -190,10 +192,68 @@ export class FormTable extends LitElement {
       .shift();
 
     if (first) {
-      first.colSpan = 1;
-      first.rowSpan = 1;
+      const { colIndex, rowIndex, colspan, rowspan } = first;
+      Array.from(Array(rowspan).keys()).forEach(y => {
+        Array.from(Array(colspan).keys()).forEach(x => {
+          const newColIndex = colIndex + x;
+          const newRowIndex = rowIndex + y;
+          if (!this._getGridItem(newColIndex, newRowIndex)) {
+            const newItem = this._createGridItem(newColIndex, newRowIndex);
+            this.appendChild(newItem);
+          }
+        });
+      });
+      first.colspan = 1;
+      first.rowspan = 1;
     }
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  insertColLeft(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  insertColRight(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  insertRowAbove(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  insertRowBelow(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  onCreateGridItem(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  onRemoveGridItem(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  // endregion
+
+  // region private functions
+  private _createGridItem = (col: number, row: number) => {
+    const element = document.createElement('form-table-cell') as FormTableCell;
+    element.colIndex = col;
+    element.rowIndex = row;
+    return element;
+  };
+
+  private _getGridItem(col: number, row: number) {
+    return this.querySelector(
+      `form-table-cell[col-index="${col}"][row-index="${row}"]`
+    );
+  }
+
   // endregion
 
   private _onSlotChange() {
@@ -204,11 +264,11 @@ export class FormTable extends LitElement {
     });
 
     this.col = Array.from(cells)
-      .map(cell => cell.colIndex + cell.colSpan - 1)
+      .map(cell => cell.colIndex + cell.colspan - 1)
       .reduce((previous, current) => Math.max(previous, current), 0);
 
     this.row = Array.from(cells)
-      .map(cell => cell.rowIndex + cell.rowSpan - 1)
+      .map(cell => cell.rowIndex + cell.rowspan - 1)
       .reduce((previous, current) => Math.max(previous, current), 0);
   }
 

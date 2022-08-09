@@ -86,6 +86,8 @@ export const Sample = () => html`
     </div>
     <div class="row">
       <span class="cell black"></span>
+      <span class="cell black"></span>
+      <span class="cell black"></span>
     </div>
   </div>
 `;
