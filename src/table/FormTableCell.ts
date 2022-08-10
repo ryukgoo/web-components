@@ -4,8 +4,8 @@ import { property } from 'lit/decorators.js';
 export class FormTableCell extends LitElement {
   static styles = css`
     :host {
+      display: table-cell;
       user-select: none;
-      display: grid;
       border: 1px solid #444444;
     }
 
@@ -26,6 +26,12 @@ export class FormTableCell extends LitElement {
 
   @property({ type: Number, reflect: true })
   rowspan = 1;
+
+  @property({ type: String, reflect: true, attribute: 'horizontal-align' })
+  horizontalAlign = 'left';
+
+  @property({ type: String, reflect: true, attribute: 'vertical-align' })
+  verticalAlign = 'middle';
 
   @property({ type: String, reflect: true, attribute: 'background-color' })
   backgroundColor = 'white';
@@ -92,11 +98,20 @@ export class FormTableCell extends LitElement {
   protected updated(_changedProperties: PropertyValues) {
     super.updated(_changedProperties);
 
+    if (_changedProperties.has('verticalAlign')) {
+      this.style.alignItems = this.verticalAlign;
+    }
+    if (_changedProperties.has('horizontalAlign')) {
+      this.style.justifyContent = this.horizontalAlign;
+    }
+
     Array.from(_changedProperties.keys()).forEach(key => {
+      if (!key.toString().includes('border')) return;
       // @ts-ignore
       const newValue = this[key];
       const oldValue = _changedProperties.get(key);
-      if (oldValue !== newValue) {
+      // @ts-ignore
+      if (this.style[key] && oldValue !== newValue) {
         // @ts-ignore
         this.style[key] = newValue;
       }

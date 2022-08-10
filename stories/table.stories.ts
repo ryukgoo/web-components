@@ -15,6 +15,8 @@ export const FormTable = () => html`
       row-index="1"
       colspan="2"
       rowspan="2"
+      horizontal-align="center"
+      vertical-align="center"
       border-top-color="pink"
       border-left-color="red"
       border-right-color="red"
