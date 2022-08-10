@@ -10,7 +10,6 @@ export class FormTable extends LitElement {
   static styles = css`
     :host {
       display: grid;
-      border-collapse: collapse;
       box-sizing: border-box;
       gap: 0;
     }
@@ -185,6 +184,8 @@ export class FormTable extends LitElement {
   private _onMouseMove(event: Event) {
     const target = event.target as FormTableCell;
     const cell = target.closest('form-table-cell') as FormTableCell;
+
+    if (!cell) return;
 
     const start = {
       x: Math.min(this._pressedCell!.colIndex, cell.colIndex),
@@ -367,6 +368,7 @@ export class FormTable extends LitElement {
       .reduce((previous, current) => Math.max(previous, current), 0);
   }
 
+  // region lifecycle
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener('keydown', this._onKeyDownHandler);
@@ -388,6 +390,8 @@ export class FormTable extends LitElement {
       this.rowSizes = Array(this.row).fill(32);
     }
   }
+
+  // endregion
 
   protected render(): unknown {
     return html` <style>

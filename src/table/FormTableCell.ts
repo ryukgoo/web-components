@@ -7,8 +7,6 @@ export class FormTableCell extends LitElement {
       user-select: none;
       display: grid;
       border: 1px solid #444444;
-      margin-top: -1px;
-      margin-left: -1px;
     }
 
     :host(.focus) {
@@ -80,6 +78,7 @@ export class FormTableCell extends LitElement {
     this.dispatchEvent(new CustomEvent('mousedownRow', event));
     event.stopPropagation();
   }
+
   // endregion
 
   public setFocus() {
@@ -108,13 +107,19 @@ export class FormTableCell extends LitElement {
     return html`
       <style>
         :host {
-          box-sizing: content-box;
-          position: -webkit-sticky;
+          box-sizing: border-box;
           position: relative;
           grid-column: ${this.colIndex} / span ${this.colspan};
           grid-row: ${this.rowIndex} / span ${this.rowspan};
           background-color: ${this.backgroundColor};
+          margin-top: -${this.style.borderTopWidth !== ''
+            ? this.style.borderTopWidth
+            : 1}px;
+          margin-left: -${this.style.borderLeftWidth !== ''
+            ? this.style.borderLeftWidth
+            : 1}px;
         }
+
         .resize-handle {
           position: absolute;
           top: 0;
