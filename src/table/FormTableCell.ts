@@ -16,6 +16,7 @@ export class FormTableCell extends LitElement {
     }
   `;
 
+  // region properties
   @property({ type: Number, reflect: true, attribute: 'col-index' })
   colIndex = 0;
 
@@ -44,28 +45,29 @@ export class FormTableCell extends LitElement {
   borderBottomColor = '';
 
   @property({ type: String, reflect: true, attribute: 'border-left-style' })
-  borderLeftStyle = 'solid';
+  borderLeftStyle = '';
 
   @property({ type: String, reflect: true, attribute: 'border-right-style' })
-  borderRightStyle = 'solid';
+  borderRightStyle = '';
 
   @property({ type: String, reflect: true, attribute: 'border-top-style' })
-  borderTopStyle = 'solid';
+  borderTopStyle = '';
 
   @property({ type: String, reflect: true, attribute: 'border-bottom-style' })
-  borderBottomStyle = 'solid';
+  borderBottomStyle = '';
 
   @property({ type: String, reflect: true, attribute: 'border-left-width' })
-  borderLeftWidth = '1px';
+  borderLeftWidth = '';
 
   @property({ type: String, reflect: true, attribute: 'border-right-width' })
-  borderRightWidth = '1px';
+  borderRightWidth = '';
 
   @property({ type: String, reflect: true, attribute: 'border-top-width' })
-  borderTopWidth = '1px';
+  borderTopWidth = '';
 
   @property({ type: String, reflect: true, attribute: 'border-bottom-width' })
-  borderBottomWidth = '1px';
+  borderBottomWidth = '';
+  // endregion
 
   public setFocus() {
     this.classList.add('focus');
