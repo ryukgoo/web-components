@@ -67,6 +67,19 @@ export class FormTableCell extends LitElement {
 
   @property({ type: String, reflect: true, attribute: 'border-bottom-width' })
   borderBottomWidth = '';
+
+  // endregion
+
+  // region event handler
+  private _onMouseDownCol(event: Event) {
+    this.dispatchEvent(new CustomEvent('mousedownCol', event));
+    event.stopPropagation();
+  }
+
+  private _onMouseDownRow(event: Event) {
+    this.dispatchEvent(new CustomEvent('mousedownRow', event));
+    event.stopPropagation();
+  }
   // endregion
 
   public setFocus() {
@@ -95,11 +108,50 @@ export class FormTableCell extends LitElement {
     return html`
       <style>
         :host {
+          box-sizing: content-box;
+          position: -webkit-sticky;
+          position: relative;
           grid-column: ${this.colIndex} / span ${this.colspan};
           grid-row: ${this.rowIndex} / span ${this.rowspan};
           background-color: ${this.backgroundColor};
         }
+        .resize-handle {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          background: red;
+          opacity: 0;
+          width: 5px;
+          height: 100%;
+          cursor: col-resize;
+        }
+
+        .resize-handle:hover,
+        .header--being-resized .resize-handle {
+          opacity: 0.5;
+        }
+
+        .resize-handle-row {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          background: red;
+          opacity: 0;
+          width: 100%;
+          height: 5px;
+          cursor: row-resize;
+        }
+
+        .resize-handle-row:hover {
+          opacity: 0.5;
+        }
       </style>
+      <span
+        class="resize-handle-row"
+        @mousedown="${this._onMouseDownRow}"
+      ></span>
+      <span class="resize-handle" @mousedown="${this._onMouseDownCol}"></span>
       <slot></slot>
     `;
   }

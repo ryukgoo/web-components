@@ -1,5 +1,9 @@
 import { css, html, LitElement, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { range } from 'lit-html/directives/range.js';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { map } from 'lit-html/directives/map.js';
 import { FormTableCell } from './FormTableCell.js';
 import { FormTableInterface } from './FormTableInterface.js';
 
@@ -7,20 +11,47 @@ export class FormTable extends LitElement implements FormTableInterface {
   static styles = css`
     :host {
       display: grid;
-      width: 100%;
       border-collapse: collapse;
       box-sizing: border-box;
-      grid-auto-columns: 1fr;
-      grid-auto-rows: minmax(32px, auto);
       gap: 0;
     }
   `;
 
   @property({ type: Number, reflect: true })
-  col = 0;
+  col = 2;
 
   @property({ type: Number, reflect: true })
-  row = 0;
+  row = 2;
+
+  static sizeArrayToString = (array: number[]) =>
+    array.map(size => `${size}px`).join(' ');
+
+  static stringToSizeArray = (value: string) =>
+    value
+      ?.split(' ')
+      .map(stringValue => JSON.parse(stringValue.replace('px', ''))) ?? [];
+
+  @property({
+    type: String,
+    reflect: true,
+    attribute: 'col-sizes',
+    converter: {
+      fromAttribute: FormTable.stringToSizeArray,
+      toAttribute: FormTable.sizeArrayToString,
+    },
+  })
+  colSizes: number[] = [];
+
+  @property({
+    type: String,
+    reflect: true,
+    attribute: 'row-sizes',
+    converter: {
+      fromAttribute: FormTable.stringToSizeArray,
+      toAttribute: FormTable.sizeArrayToString,
+    },
+  })
+  rowSizes: number[] = [];
 
   // region key event
 
@@ -43,6 +74,97 @@ export class FormTable extends LitElement implements FormTableInterface {
 
   // endregion
 
+  // region resize event
+  private _resizeCell: FormTableCell | undefined;
+
+  private _onMouseDownColHandler = this._onMouseDownCol.bind(this);
+
+  private _onMouseDownCol(event: Event) {
+    this._resizeCell = event.target as FormTableCell;
+    window.addEventListener('mousemove', this._onMouseMoveColHandler);
+    window.addEventListener('mouseup', this._onMouseUpColHandler);
+    this._clearSelection();
+  }
+
+  private _onMouseMoveColHandler = this._onMouseMoveCol.bind(this);
+
+  private _onMouseMoveCol(event: Event) {
+    const mouseEvent = event as MouseEvent;
+    requestAnimationFrame(() => {
+      const colIndex = this._resizeCell?.colIndex ?? 1;
+      const colspan = this._resizeCell?.colspan ?? 1;
+      const resizedIndex = colIndex + colspan - 1 - 1;
+      const header = this.shadowRoot?.querySelector(
+        `th[data-set-index="${resizedIndex}"]`
+      );
+      const width = Math.floor(
+        mouseEvent.clientX - (header?.getBoundingClientRect().x ?? 0)
+      );
+      const resizedWidth = Math.max(width, 60);
+
+      const copiedColSizes = [...this.colSizes];
+      const prevColSize = copiedColSizes[resizedIndex];
+      copiedColSizes[resizedIndex] = resizedWidth;
+
+      const nextColSize = copiedColSizes[resizedIndex + 1];
+      if (nextColSize !== undefined) {
+        copiedColSizes[resizedIndex + 1] =
+          nextColSize + prevColSize - resizedWidth;
+        if (copiedColSizes[resizedIndex + 1] < 60) return;
+      }
+      this.colSizes = copiedColSizes;
+    });
+  }
+
+  private _onMouseUpColHandler = this._onMouseUpCol.bind(this);
+
+  private _onMouseUpCol() {
+    window.removeEventListener('mousemove', this._onMouseMoveColHandler);
+    window.removeEventListener('mouseup', this._onMouseUpColHandler);
+    // TODO: send message colSizes
+  }
+
+  private _onMouseDownRowHandler = this._onMouseDownRow.bind(this);
+
+  private _onMouseDownRow(event: Event) {
+    this._resizeCell = event.target as FormTableCell;
+    window.addEventListener('mousemove', this._onMouseMoveRowHandler);
+    window.addEventListener('mouseup', this._onMouseUpRowHandler);
+    this._clearSelection();
+  }
+
+  private _onMouseMoveRowHandler = this._onMouseMoveRow.bind(this);
+
+  private _onMouseMoveRow(event: Event) {
+    const mouseEvent = event as MouseEvent;
+    requestAnimationFrame(() => {
+      const rowIndex = this._resizeCell?.rowIndex ?? 1;
+      const rowspan = this._resizeCell?.rowspan ?? 1;
+      const resizedIndex = rowIndex + rowspan - 1 - 1;
+      const row = this.shadowRoot?.querySelector(
+        `tr[data-set-index="${resizedIndex}"]`
+      );
+      const height = Math.floor(
+        mouseEvent.clientY - (row?.getBoundingClientRect().y ?? 0)
+      );
+      const resizedHeight = Math.max(height, 32);
+
+      const copiedRowSizes = [...this.rowSizes];
+      copiedRowSizes[resizedIndex] = resizedHeight;
+      this.rowSizes = copiedRowSizes;
+    });
+  }
+
+  private _onMouseUpRowHandler = this._onMouseUpRow.bind(this);
+
+  private _onMouseUpRow() {
+    window.removeEventListener('mousemove', this._onMouseMoveRowHandler);
+    window.removeEventListener('mouseup', this._onMouseUpRowHandler);
+    // TODO: send message rowSizes
+  }
+
+  // endregion
+
   // region select TableCell
   private _selection: FormTableCell[] = [];
 
@@ -56,6 +178,7 @@ export class FormTable extends LitElement implements FormTableInterface {
     window.addEventListener('mouseup', this._onMouseUpHandler);
     const target = event.target as HTMLElement;
     this._pressedCell = target.closest('form-table-cell') as FormTableCell;
+    this._addSelection(this._pressedCell);
   }
 
   private _onMouseMoveHandler = this._onMouseMove.bind(this);
@@ -103,6 +226,7 @@ export class FormTable extends LitElement implements FormTableInterface {
     start: { x: number; y: number },
     end: { x: number; y: number }
   ) {
+    this._clearSelection();
     this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
       if (
         (cell.colIndex >= start.x &&
@@ -261,6 +385,8 @@ export class FormTable extends LitElement implements FormTableInterface {
 
     cells.forEach(cell => {
       cell.addEventListener('mousedown', this._onMouseDownHandler);
+      cell.addEventListener('mousedownCol', this._onMouseDownColHandler);
+      cell.addEventListener('mousedownRow', this._onMouseDownRowHandler);
     });
 
     this.col = Array.from(cells)
@@ -284,16 +410,41 @@ export class FormTable extends LitElement implements FormTableInterface {
 
   protected updated(_changedProperties: PropertyValues) {
     super.updated(_changedProperties);
-
-    if (_changedProperties.has('col')) {
-      this.style.gridTemplateColumns = `repeat(${this.col}, 1fr)`;
+    if (this.colSizes.length === 0 || this.colSizes.length !== this.col) {
+      const parentWidth = this.parentElement?.clientWidth ?? 648;
+      const cellWidth = Math.floor(parentWidth / this.col);
+      this.colSizes = Array(this.col).fill(cellWidth);
     }
-    if (_changedProperties.has('row')) {
-      this.style.gridTemplateRows = `repeat(${this.row}, auto)`;
+    if (this.rowSizes.length === 0 || this.rowSizes.length !== this.row) {
+      this.rowSizes = Array(this.row).fill(32);
     }
   }
 
   protected render(): unknown {
-    return html` <slot @slotchange="${this._onSlotChange}"></slot>`;
+    return html` <style>
+        :host {
+          grid-template-columns: ${this.colSizes
+            .map(size => `${size}px`)
+            .join(' ')};
+          grid-template-rows: ${this.rowSizes
+            .map(size => `minmax(${size}px, auto)`)
+            .join(' ')};
+        }
+      </style>
+      ${map(
+        range(this.col),
+        index => html` <th
+          data-set-index="${index}"
+          style="grid-column: ${index + 1}"
+        ></th>`
+      )}
+      ${map(
+        range(this.row),
+        index => html` <tr
+          data-set-index="${index}"
+          style="grid-row: ${index + 1}"
+        ></tr>`
+      )}
+      <slot @slotchange="${this._onSlotChange}"></slot>`;
   }
 }
