@@ -5,9 +5,8 @@ import { range } from 'lit-html/directives/range.js';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { map } from 'lit-html/directives/map.js';
 import { FormTableCell } from './FormTableCell.js';
-import { FormTableInterface } from './FormTableInterface.js';
 
-export class FormTable extends LitElement implements FormTableInterface {
+export class FormTable extends LitElement {
   static styles = css`
     :host {
       display: grid;
@@ -330,36 +329,6 @@ export class FormTable extends LitElement implements FormTableInterface {
       first.colspan = 1;
       first.rowspan = 1;
     }
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  insertColLeft(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  insertColRight(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  insertRowAbove(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  insertRowBelow(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  onCreateGridItem(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  onRemoveGridItem(): void {
-    throw new Error('Method not implemented.');
   }
 
   // endregion
