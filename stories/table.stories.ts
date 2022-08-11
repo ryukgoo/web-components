@@ -49,15 +49,10 @@ export const FormTable = () => html`
       rowspan="2"
       border-right-style="dotted"
     ></form-table-cell>
-    <form-table-cell col-index="1" row-index="4"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="2" row-index="4"><p>Cell</p></form-table-cell>
+    <form-table-cell col-index="1" row-index="4" colspan="2" rowspan="2"
+      ><p>Cell</p></form-table-cell
+    >
     <form-table-cell col-index="3" row-index="4"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="1" row-index="5"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="2" row-index="5"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="3" row-index="5"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="4" row-index="5"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="1" row-index="5"><p>Cell</p></form-table-cell>
-    <form-table-cell col-index="2" row-index="5"><p>Cell</p></form-table-cell>
     <form-table-cell col-index="3" row-index="5"><p>Cell</p></form-table-cell>
     <form-table-cell col-index="4" row-index="5"><p>Cell</p></form-table-cell>
   </form-table>

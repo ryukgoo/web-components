@@ -6,6 +6,8 @@ import { range } from 'lit-html/directives/range.js';
 import { map } from 'lit-html/directives/map.js';
 import { FormTableCell } from './FormTableCell.js';
 
+export type Point = { x: number; y: number };
+
 export class FormTable extends LitElement {
   static styles = css`
     :host {
@@ -222,22 +224,33 @@ export class FormTable extends LitElement {
     });
   }
 
-  private _setSelection(
-    start: { x: number; y: number },
-    end: { x: number; y: number }
-  ) {
+  private _rectOverlap = (l1: Point, r1: Point, l2: Point, r2: Point) => {
+    const startMinX = Math.min(l1.x, r1.x);
+    const startMaxX = Math.max(l1.x, r1.x);
+    const startMinY = Math.min(l1.y, r1.y);
+    const startMaxY = Math.max(l1.y, r1.y);
+    const endMinX = Math.min(l2.x, r2.x);
+    const endMaxX = Math.max(l2.x, r2.x);
+    const endMinY = Math.min(l2.y, r2.y);
+    const endMaxY = Math.max(l2.y, r2.y);
+    return !(
+      startMinX > endMaxX ||
+      endMinX > startMaxX ||
+      startMinY > endMaxY ||
+      endMinY > startMaxY
+    );
+  };
+
+  private _setSelection(start: Point, end: Point) {
     this._clearSelection();
+    this._selection = [this._pressedCell!];
     this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
-      if (
-        (cell.colIndex >= start.x &&
-          cell.colIndex <= end.x &&
-          cell.rowIndex >= start.y &&
-          cell.rowIndex <= end.y) ||
-        (cell.colIndex + cell.colspan - 1 >= start.x &&
-          cell.colIndex + cell.colspan - 1 <= end.x &&
-          cell.rowIndex + cell.rowspan - 1 >= start.y &&
-          cell.rowIndex + cell.rowspan - 1 <= end.y)
-      ) {
+      const cellStart = { x: cell.colIndex, y: cell.rowIndex };
+      const cellEnd = {
+        x: cell.colIndex + (cell.colspan ?? 1) - 1,
+        y: cell.rowIndex + (cell.rowspan ?? 1) - 1,
+      };
+      if (this._rectOverlap(start, end, cellStart, cellEnd)) {
         this._addSelection(cell);
       }
     });
