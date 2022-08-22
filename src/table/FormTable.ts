@@ -13,15 +13,26 @@ export class FormTable extends LitElement {
     :host {
       display: grid;
       box-sizing: border-box;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      border-left: 1px solid black;
       gap: 0;
+    }
+
+    :host([fd]) {
+      overflow-x: auto;
     }
   `;
 
-  @property({ type: Number, reflect: true })
-  col = 2;
+  static DEFAULT_COL = 2;
+
+  static DEFAULT_ROW = 2;
 
   @property({ type: Number, reflect: true })
-  row = 2;
+  col = FormTable.DEFAULT_COL;
+
+  @property({ type: Number, reflect: true })
+  row = FormTable.DEFAULT_ROW;
 
   static sizeArrayToString = (array: number[]) =>
     array.map(size => `${size}px`).join(' ');
@@ -358,7 +369,7 @@ export class FormTable extends LitElement {
   private _getGridItem(col: number, row: number) {
     return this.querySelector(
       `form-table-cell[col-index="${col}"][row-index="${row}"]`
-    );
+    ) as FormTableCell;
   }
 
   // endregion
@@ -370,6 +381,72 @@ export class FormTable extends LitElement {
       cell.addEventListener('mousedown', this._onMouseDownHandler);
       cell.addEventListener('mousedownCol', this._onMouseDownColHandler);
       cell.addEventListener('mousedownRow', this._onMouseDownRowHandler);
+    });
+
+    this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
+      // eslint-disable-next-line no-param-reassign
+      cell.leftSiblings = [];
+      // eslint-disable-next-line no-param-reassign
+      cell.rightSiblings = [];
+      // eslint-disable-next-line no-param-reassign
+      cell.topSiblings = [];
+      // eslint-disable-next-line no-param-reassign
+      cell.bottomSiblings = [];
+    });
+
+    this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
+      console.log('cell', cell);
+      const leftColIndex = cell.colIndex;
+      Array.from(Array(cell.rowspan ?? 1).keys())
+        .map(key => key + cell.rowIndex)
+        .map(rowIndex => this._getGridItem(leftColIndex - 1, rowIndex))
+        .forEach(sibling => {
+          if (sibling) {
+            if (!cell.leftSiblings?.includes(sibling))
+              cell.leftSiblings?.push(sibling);
+            if (!sibling?.rightSiblings?.includes(cell))
+              sibling?.rightSiblings?.push(cell);
+          }
+        });
+
+      const rightColIndex = cell.colIndex + cell.colspan - 1;
+      Array.from(Array(cell.rowspan ?? 1).keys())
+        .map(key => key + cell.rowIndex)
+        .map(rowIndex => this._getGridItem(rightColIndex + 1, rowIndex))
+        .forEach(sibling => {
+          if (sibling) {
+            if (!cell.rightSiblings?.includes(sibling))
+              cell.rightSiblings?.push(sibling);
+            if (!sibling?.leftSiblings?.includes(cell))
+              sibling?.leftSiblings?.push(cell);
+          }
+        });
+
+      const topRowIndex = cell.rowIndex;
+      Array.from(Array(cell.colspan ?? 1).keys())
+        .map(key => key + cell.colIndex)
+        .map(colIndex => this._getGridItem(colIndex, topRowIndex - 1))
+        .forEach(sibling => {
+          if (sibling) {
+            if (!cell.topSiblings?.includes(sibling))
+              cell.topSiblings?.push(sibling);
+            if (!sibling?.bottomSiblings?.includes(cell))
+              sibling?.bottomSiblings?.push(cell);
+          }
+        });
+
+      const bottomIndex = cell.rowIndex + cell.rowspan - 1;
+      Array.from(Array(cell.colspan ?? 1).keys())
+        .map(key => key + cell.colIndex)
+        .map(colIndex => this._getGridItem(colIndex, bottomIndex + 1))
+        .forEach(sibling => {
+          if (sibling) {
+            if (!cell.bottomSiblings?.includes(sibling))
+              cell.bottomSiblings?.push(sibling);
+            if (!sibling?.topSiblings?.includes(cell))
+              sibling?.topSiblings?.push(cell);
+          }
+        });
     });
 
     this.col = Array.from(cells)
@@ -419,17 +496,19 @@ export class FormTable extends LitElement {
       </style>
       ${map(
         range(this.col),
-        index => html` <th
-          data-set-index="${index}"
-          style="grid-column: ${index + 1}"
-        ></th>`
+        index =>
+          html` <th
+            data-set-index="${index}"
+            style="grid-column: ${index + 1}; height: 0;"
+          ></th>`
       )}
       ${map(
         range(this.row),
-        index => html` <tr
-          data-set-index="${index}"
-          style="grid-row: ${index + 1}"
-        ></tr>`
+        index =>
+          html` <tr
+            data-set-index="${index}"
+            style="grid-row: ${index + 1}; width: 0;"
+          ></tr>`
       )}
       <slot @slotchange="${this._onSlotChange}"></slot>`;
   }

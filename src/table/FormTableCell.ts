@@ -6,11 +6,48 @@ export class FormTableCell extends LitElement {
     :host {
       display: table-cell;
       user-select: none;
-      border: 1px solid #444444;
+      border-right: 1px solid black;
+      border-bottom: 1px solid black;
     }
 
     :host(.focus) {
-      background-color: bisque !important;
+      background-color: rgba(0, 0, 255, 0.1) !important;
+    }
+
+    :host([row-index='1']) {
+      border-top: 1px solid black;
+    }
+
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      opacity: 0;
+      width: 5px;
+      height: 100%;
+      cursor: col-resize;
+    }
+
+    .resize-handle:hover,
+    .header--being-resized .resize-handle {
+      opacity: 0.5;
+    }
+
+    .resize-handle-row {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      opacity: 0;
+      width: 100%;
+      height: 5px;
+      cursor: row-resize;
+    }
+
+    .resize-handle-row:hover {
+      opacity: 0.5;
     }
   `;
 
@@ -72,6 +109,14 @@ export class FormTableCell extends LitElement {
   @property({ type: String, reflect: true, attribute: 'border-bottom-width' })
   borderBottomWidth = '';
 
+  public leftSiblings: FormTableCell[] = [];
+
+  public rightSiblings: FormTableCell[] = [];
+
+  public topSiblings: FormTableCell[] = [];
+
+  public bottomSiblings: FormTableCell[] = [];
+
   // endregion
 
   // region event handler
@@ -84,6 +129,37 @@ export class FormTableCell extends LitElement {
     this.dispatchEvent(new CustomEvent('mousedownRow', event));
     event.stopPropagation();
   }
+
+  private _reverseBorderKey = (key: string) => {
+    switch (key) {
+      case 'borderLeftColor':
+        return 'borderRightColor';
+      case 'borderLeftStyle':
+        return 'borderRightStyle';
+      case 'borderLeftWidth':
+        return 'borderRightWidth';
+      case 'borderRightColor':
+        return 'borderLeftColor';
+      case 'borderRightStyle':
+        return 'borderLeftStyle';
+      case 'borderRightWidth':
+        return 'borderLeftWidth';
+      case 'borderTopColor':
+        return 'borderBottomColor';
+      case 'borderTopStyle':
+        return 'borderBottomStyle';
+      case 'borderTopWidth':
+        return 'borderBottomWidth';
+      case 'borderBottomColor':
+        return 'borderTopColor';
+      case 'borderBottomStyle':
+        return 'borderTopStyle';
+      case 'borderBottomWidth':
+        return 'borderTopWidth';
+      default:
+        return '';
+    }
+  };
 
   // endregion
 
@@ -98,6 +174,9 @@ export class FormTableCell extends LitElement {
   protected updated(_changedProperties: PropertyValues) {
     super.updated(_changedProperties);
 
+    if (_changedProperties.has('backgroundColor')) {
+      this.style.backgroundColor = this.backgroundColor;
+    }
     if (_changedProperties.has('verticalAlign')) {
       this.style.alignItems = this.verticalAlign;
     }
@@ -111,9 +190,42 @@ export class FormTableCell extends LitElement {
       const newValue = this[key];
       const oldValue = _changedProperties.get(key);
       // @ts-ignore
-      if (this.style[key] && oldValue !== newValue) {
+      if (this.style[key] !== undefined && oldValue !== newValue) {
         // @ts-ignore
         this.style[key] = newValue;
+        // console.log('key', key);
+        if (key.toString().includes('Left')) {
+          this.leftSiblings?.forEach(left => {
+            const reverseKey = this._reverseBorderKey(key.toString());
+            // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
+            left[reverseKey] = newValue;
+          });
+        }
+        if (key.toString().includes('Right')) {
+          this.rightSiblings?.forEach(right => {
+            const reverseKey = this._reverseBorderKey(key.toString());
+            // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
+            right[reverseKey] = newValue;
+          });
+        }
+        if (key.toString().includes('Top')) {
+          this.topSiblings?.forEach(top => {
+            const reverseKey = this._reverseBorderKey(key.toString());
+            // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
+            top[reverseKey] = newValue;
+          });
+        }
+        if (key.toString().includes('Bottom')) {
+          this.bottomSiblings?.forEach(bottom => {
+            const reverseKey = this._reverseBorderKey(key.toString());
+            // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
+            bottom[reverseKey] = newValue;
+          });
+        }
       }
     });
   }
@@ -127,44 +239,6 @@ export class FormTableCell extends LitElement {
           grid-column: ${this.colIndex} / span ${this.colspan};
           grid-row: ${this.rowIndex} / span ${this.rowspan};
           background-color: ${this.backgroundColor};
-          margin-top: -${this.style.borderTopWidth !== ''
-            ? this.style.borderTopWidth
-            : 1}px;
-          margin-left: -${this.style.borderLeftWidth !== ''
-            ? this.style.borderLeftWidth
-            : 1}px;
-        }
-
-        .resize-handle {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          background: red;
-          opacity: 0;
-          width: 5px;
-          height: 100%;
-          cursor: col-resize;
-        }
-
-        .resize-handle:hover,
-        .header--being-resized .resize-handle {
-          opacity: 0.5;
-        }
-
-        .resize-handle-row {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          background: red;
-          opacity: 0;
-          width: 100%;
-          height: 5px;
-          cursor: row-resize;
-        }
-
-        .resize-handle-row:hover {
-          opacity: 0.5;
         }
       </style>
       <span
