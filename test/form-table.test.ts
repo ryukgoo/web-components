@@ -58,7 +58,7 @@ describe('FormTable', () => {
     table.rowSizes.forEach(size => expect(size).to.equal(32));
   });
 
-  it('is 3X3 table, border test', async () => {
+  it('is 3X3 table, style test', async () => {
     const table = await fixture<FormTable>(html`<form-table col-sizes="200 400">
       <form-table-cell col-index="1" row-index="1"></form-table-cell>
       <form-table-cell col-index="2" row-index="1"></form-table-cell>
@@ -67,6 +67,7 @@ describe('FormTable', () => {
       <form-table-cell
         col-index="2"
         row-index="2"
+        background-color="blue"
         border-left-color="red"
       ></form-table-cell>
       <form-table-cell col-index="3" row-index="2"></form-table-cell>
@@ -75,17 +76,12 @@ describe('FormTable', () => {
       <form-table-cell col-index="3" row-index="3"></form-table-cell>
     </form-table>`);
 
+    await expect(table).shadowDom.to.be.accessible();
+
     const cell = table.querySelector(
       `form-table-cell[col-index='2'][row-index='2']`
     ) as FormTableCell;
-    expect(cell.borderLeftColor).to.equal('red');
-    const left = table.querySelector(
-      `form-table-cell[col-index='1'][row-index='2']`
-    ) as FormTableCell;
-    expect(left.style.borderRightColor).to.equal('red');
-    const right = table.querySelector(
-      `form-table-cell[col-index='3'][row-index='2']`
-    ) as FormTableCell;
-    expect(right.borderRightColor).to.equal('red');
+    expect(cell.style.borderLeftColor).to.equal('red');
+    expect(cell.style.backgroundColor).to.equal('blue');
   });
 });

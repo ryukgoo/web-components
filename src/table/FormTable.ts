@@ -395,7 +395,6 @@ export class FormTable extends LitElement {
     });
 
     this.querySelectorAll<FormTableCell>('form-table-cell').forEach(cell => {
-      console.log('cell', cell);
       const leftColIndex = cell.colIndex;
       Array.from(Array(cell.rowspan ?? 1).keys())
         .map(key => key + cell.rowIndex)
