@@ -54,7 +54,7 @@ describe('FormTable', () => {
     const cell = table.querySelector(
       `form-table-cell[col-index='1'][row-index='1']`
     ) as FormTableCell;
-    expect(cell.clientWidth).to.equal(599);
+    expect(cell.clientWidth).to.equal(598); // ??
     table.rowSizes.forEach(size => expect(size).to.equal(32));
   });
 

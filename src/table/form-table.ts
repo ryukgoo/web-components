@@ -4,7 +4,7 @@ import { property } from 'lit/decorators.js';
 import { range } from 'lit-html/directives/range.js';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { map } from 'lit-html/directives/map.js';
-import { FormTableCell } from './FormTableCell.js';
+import { FormTableCell } from './form-table-cell.js';
 
 export type Point = { x: number; y: number };
 
@@ -15,7 +15,6 @@ export class FormTable extends LitElement {
       box-sizing: border-box;
       margin-top: 8px;
       margin-bottom: 8px;
-      border-left: 1px solid black;
       gap: 0;
     }
 

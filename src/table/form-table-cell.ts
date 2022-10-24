@@ -4,10 +4,19 @@ import { property } from 'lit/decorators.js';
 export class FormTableCell extends LitElement {
   static styles = css`
     :host {
-      display: table-cell;
+      //display: table-cell;
+      display: flex;
+      align-items: center;
+      align-content: center;
+      flex-wrap: wrap;
       user-select: none;
       border-right: 1px solid black;
       border-bottom: 1px solid black;
+
+      ::slotted(*) {
+        flex: 0 0 auto;
+        width: 100%;
+      }
     }
 
     :host(.focus) {
@@ -16,6 +25,10 @@ export class FormTableCell extends LitElement {
 
     :host([row-index='1']) {
       border-top: 1px solid black;
+    }
+
+    :host([col-index='1']) {
+      border-left: 1px solid black;
     }
 
     .resize-handle {
@@ -71,7 +84,7 @@ export class FormTableCell extends LitElement {
   verticalAlign = 'middle';
 
   @property({ type: String, reflect: true, attribute: 'background-color' })
-  backgroundColor = 'white';
+  backgroundColor = '';
 
   @property({ type: String, reflect: true, attribute: 'border-left-color' })
   borderLeftColor = '';
