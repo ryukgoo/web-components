@@ -42,7 +42,11 @@
     "lint-staged": "^10.5.4",
     "prettier": "^2.4.1",
     "tslib": "^2.3.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "@types/google.maps": "^3.49.2",
+    "@types/kakaomaps": "^1.1.2",
+    "@types/navermaps": "^3.0.17",
+    "async-mutex": "^0.3.2"
   },
   "customElements": "custom-elements.json",
   "eslintConfig": {

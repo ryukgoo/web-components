@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import '../src/table/form-table.js';
 
 export default {
   title: 'FormTable',

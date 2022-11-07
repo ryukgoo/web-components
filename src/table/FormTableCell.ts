@@ -199,43 +199,45 @@ export class FormTableCell extends LitElement {
 
     Array.from(_changedProperties.keys()).forEach(key => {
       if (!key.toString().includes('border')) return;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const newValue = this[key];
       const oldValue = _changedProperties.get(key);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       if (this.style[key] !== undefined && oldValue !== newValue) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.style[key] = newValue;
-        // console.log('key', key);
         if (key.toString().includes('Left')) {
           this.leftSiblings?.forEach(left => {
             const reverseKey = this._reverseBorderKey(key.toString());
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line no-param-reassign
             left[reverseKey] = newValue;
           });
         }
         if (key.toString().includes('Right')) {
           this.rightSiblings?.forEach(right => {
             const reverseKey = this._reverseBorderKey(key.toString());
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line no-param-reassign
             right[reverseKey] = newValue;
           });
         }
         if (key.toString().includes('Top')) {
           this.topSiblings?.forEach(top => {
             const reverseKey = this._reverseBorderKey(key.toString());
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line no-param-reassign
             top[reverseKey] = newValue;
           });
         }
         if (key.toString().includes('Bottom')) {
           this.bottomSiblings?.forEach(bottom => {
             const reverseKey = this._reverseBorderKey(key.toString());
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line no-param-reassign
             bottom[reverseKey] = newValue;
           });
         }

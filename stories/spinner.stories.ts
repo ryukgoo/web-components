@@ -1,4 +1,5 @@
 import { html } from 'lit';
+import '../src/spinner/custom-spinner.js';
 
 export default {
   title: 'CustomSpinner',
